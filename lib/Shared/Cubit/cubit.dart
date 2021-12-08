@@ -9,7 +9,7 @@ import 'package:todo/Shared/Cubit/state.dart';
 import 'package:todo/modules/ArchiveTaskScreen/archive_task_screen.dart';
 import 'package:todo/modules/FavoriteNoteScreen/favorite_note_screen.dart';
 import 'package:todo/modules/NotesScreen/notes_screen.dart';
-
+import 'package:path/path.dart';
 
 
 class AppCubit extends Cubit<AppStates> {
@@ -34,12 +34,14 @@ class AppCubit extends Cubit<AppStates> {
   }
 
 
+  Database? database ;
+
   void createDatabase (){
     openDatabase(
       'note.db',
       version: 1,
       onCreate: (database , version){
-        database.execute('CREATE TABLE notes (id INTEGER PRIMARY KEY , title TEXT , body TEXT , time TEXT , color TEXT , status TEXT )')
+        database.execute('CREATE TABLE notes (id INTEGER PRIMARY KEY , title TEXT , body TEXT , time TEXT , color INTEGER , status TEXT )')
             .then((value) {
               print('Database Created successful');
         }).catchError((error){
@@ -49,66 +51,68 @@ class AppCubit extends Cubit<AppStates> {
 
       onOpen: (database){
         print('database opened');
+        getDataFromDatabase(database);
       }
     ).then((value) {
+      database = value;
       emit(AppCreateDatabaseState());
     });
 
   }
 
-  // void insertDatabase ({
-  //   required String title ,
-  //   required String body ,
-  //   required String time ,
-  //   required String color ,
-  // })async {
-  //   emit(AppInsertDatabaseLoadingState());
-  //   database!.transaction((txn) {
-  //     txn.rawInsert('INSERT INTO notes (title , body , time , color , status) VALUES("$title" , "$body" , "$time" ,"$color" ,  "new")')
-  //     .then((value) {
-  //       print(value);
-  //       emit(AppInsertDatabaseState());
-  //     }).catchError((error){
-  //       print('Error When insert raw in datebase :  ${error.toString()}');
-  //     });
-  //     return null;
-  //   }).then((value) {
-  //     print('Successful insert note');
-  //     emit(AppInsertDatabaseState());
-  //   });
-  // }
-
-  void insertDatabase (NoteModel model) async
-  {
-    Database? database ;
-    await database!.insert('notes', model.toMap()).then((value) {
-      print(value);
+  void insertDatabase ({
+    required String title ,
+    required String body ,
+    required String time ,
+    required int color ,
+  })async {
+    emit(AppInsertDatabaseLoadingState());
+    database!.transaction((txn) {
+      txn.rawInsert('INSERT INTO notes (title , body , time , color , status) VALUES("$title" , "$body" , "$time" ,"$color" ,  "new")')
+      .then((value) {
+        print(value);
+        emit(AppInsertDatabaseState());
+        getDataFromDatabase(database);
+      }).catchError((error){
+        print('Error When insert raw in datebase :  ${error.toString()}');
+      });
+      return null;
+    }).then((value) {
+      print('Successful insert note');
       emit(AppInsertDatabaseState());
-    }).catchError((error){
-      print('Error When insert raw in datebase :  ${error.toString()}');
     });
   }
+
+  // void insertDatabase (NoteModel model) async
+  // {
+  //   await database!.insert('notes', model.toMap())
+  //       .then((value) {
+  //         print(value);
+  //     emit(AppInsertDatabaseState());
+  //   }).catchError((error){
+  //     print('Error When insert raw in datebase :  ${error.toString()}');
+  //   });
+  // }
 
 
   List <Map> notes = [];
   void getDataFromDatabase (database) async {
     notes = [];
-
     emit(AppInsertDatabaseLoadingState());
 
     database.rawQuery('SELECT * FROM notes').then((value)
     {
-      // tasks = value ;
-      value.forEach((element)
-      {
-        if(element['status'] == 'new')
-        {
-          notes.add(element);
-        }
 
-
-      });
-
+     //  value.forEach((element)
+     //  {
+     //    if(element['status'] == 'new')
+     //    {
+     //      notes.add(element);
+     //    }
+     //  });
+      notes = value ;
+      print(notes.toString());
+      print(notes.length);
       emit(AppGetDatabaseState());
     }
     );
@@ -120,7 +124,6 @@ class AppCubit extends Cubit<AppStates> {
     required int id ,
   })
   {
-    Database? database ;
     database!.rawUpdate(
         'UPDATE notes SET status = ? WHERE id = ?' ,
         ['$status' , id] ).then((value)
@@ -139,7 +142,6 @@ class AppCubit extends Cubit<AppStates> {
     required int id ,
   })
   {
-    Database? database ;
     database!.rawUpdate(
         'UPDATE notes SET title = ? , body =? , time =? , color =?  WHERE id = ?' ,
         [title , body , time , color, id] ).then((value)
@@ -156,7 +158,6 @@ class AppCubit extends Cubit<AppStates> {
     required int id ,
   })
   {
-    Database? database ;
     database!.rawDelete(
         'DELETE FROM notes  WHERE id = ?' , [id] ).then((value)
     {

@@ -6,14 +6,19 @@ import 'package:todo/Shared/Cubit/state.dart';
 import 'package:todo/modules/CreateNote/create_note.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  HomeScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (BuildContext context) => AppCubit()..createDatabase(),
       child: BlocConsumer<AppCubit , AppStates>(
-        listener: (context , state) {},
+        listener: (context , state) {
+          if(state is AppCreateDatabaseState)
+            {
+              print(AppCubit.get(context).notes.length);
+            }
+        },
         builder: (context , state) {
           var scaffoldKey = GlobalKey<ScaffoldState>();
           return Scaffold(

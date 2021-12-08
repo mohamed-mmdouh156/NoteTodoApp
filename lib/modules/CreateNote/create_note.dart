@@ -43,15 +43,12 @@ class CreateNote extends StatelessWidget {
               actions:  [
                 IconButton(
                   onPressed: (){
-                    //cubit.insertDatabase(title: titleController.text, body: bodyController.text, time: DateFormat('EEE, d MMM    hh:mm aaa').format(DateTime.now()), color: 'red');
-                    NoteModel? model = NoteModel(
-                        title: 'title',
-                        body: 'body' ,
-                        time: 'date' ,
-                        color: Colors.white.value ,
-                        status: 'new',
+                    cubit.insertDatabase(
+                        title: titleController.text,
+                        body: bodyController.text,
+                        time: DateFormat('EEE, d MMM    hh:mm aaa').format(DateTime.now()),
+                        color: cubit.chosenColor.value,
                     );
-                    cubit.insertDatabase(model);
                   },
                   icon: const Icon(
                     Icons.done,
